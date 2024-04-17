@@ -7,11 +7,13 @@
 ## Setting up Kafka Topic
 1. Open Command Prompt or Terminal.
 2. Navigate to the Kafka directory.
-3. Run the following command to create a Kafka topic named `chatz`:
+3. Run the following command to create a Kafka topic named `nnnn`:
+
     ```bash
     bin\windows\kafka-topics.bat --create --topic nnnn --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092 
     ```
-   This command will create a topic named `nnnn` with 3 partitions and a replication factor of 1.
+
+This command will create a topic named `nnnn` with 3 partitions and a replication factor of 1.
 
 ## Frontend 
 
