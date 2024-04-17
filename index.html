@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .button-container {
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 8px 15px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 3px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        #messageContainer {
+            margin-top: 20px;
+        }
+
+        #messageContainer div {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="button-container">
+            <button onclick="login()">Login</button>
+            <button onclick="logout()">Logout</button>
+            <button onclick="reconnect()">Reconnect</button>
+            <button onclick="fetchPendingMessages()">Fetch Pending Messages</button>
+        </div>
+        <div>
+            <input type="text" id="messageInput" placeholder="Enter Message">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <div id="messageContainer"></div>
+    </div>
+
+    <script>
+        var ws;
+        var clientID;
+
+        function login() {
+            ws = new WebSocket("ws://localhost:8080/ws");
+            ws.onopen = function(event) {
+                console.log("WebSocket connected");
+                clientID = localStorage.getItem("clientID");
+                if (!clientID) {
+                    clientID = generateClientID();
+                    localStorage.setItem("clientID", clientID);
+                    console.log("Generated client ID:", clientID);
+                }
+                ws.send(clientID);
+                console.log("Client ID sent to server");
+            };
+            ws.onmessage = function(event) {
+                console.log("Received message from server:", event.data);
+                var messageContainer = document.getElementById("messageContainer");
+                var messageDiv = document.createElement("div");
+                messageDiv.textContent = "Received message: " + event.data;
+                messageContainer.appendChild(messageDiv);
+            };
+        }
+
+        function logout() {
+            ws.close();
+            console.log("WebSocket connection closed");
+        }
+
+        function reconnect() {
+            logout();
+            login();
+        }
+
+        function sendMessage() {
+            var message = document.getElementById("messageInput").value;
+            ws.send(message);
+            console.log("Message sent to server:", message);
+            message.value = '';
+        }
+
+        function fetchPendingMessages() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://localhost:8080/fetchPendingMessages?clientID=" + clientID, true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        console.log("Pending messages fetched successfully");
+                    } else {
+                        console.error("Error fetching pending messages:", xhr.statusText);
+                    }
+                }
+            };
+            xhr.send();
+            console.log("Fetching pending messages for client ID:", clientID);
+        }
+
+        function generateClientID() {
+            return "Client" + Math.floor(Math.random() * 1000);
+        }
+
+        function updateMessageContainer(clientID, message, status) {
+            var messageContainer = document.getElementById("messageContainer");
+            var messageDiv = document.createElement("div");
+            messageDiv.textContent = "Client ID: " + clientID + " - Message: " + message + " {" + status + "}";
+            messageContainer.appendChild(messageDiv);
+        }
+    </script>
+</body>
+</html>
